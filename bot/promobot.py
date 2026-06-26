@@ -40,7 +40,35 @@ logger = logging.getLogger(__name__)
 
 
 def get_db():
-    return psycopg2.connect(DATABASE_URL, cursor_factory=psycopg2.extras.RealDictCursor)
+    url = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+    return psycopg2.connect(url, cursor_factory=psycopg2.extras.RealDictCursor)
+
+
+def db_init_tables():
+    with get_db() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS vacancies (
+                    id SERIAL PRIMARY KEY,
+                    title TEXT NOT NULL,
+                    description TEXT,
+                    pay TEXT,
+                    contact TEXT,
+                    employer_id BIGINT,
+                    employer_name TEXT,
+                    employer_username TEXT,
+                    created_at TIMESTAMPTZ DEFAULT NOW()
+                )
+            """)
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS blacklisted_users (
+                    user_id BIGINT PRIMARY KEY,
+                    username TEXT,
+                    name TEXT,
+                    created_at TIMESTAMPTZ DEFAULT NOW()
+                )
+            """)
+        conn.commit()
 
 
 def db_get_all_vacancies():
@@ -655,7 +683,7 @@ def main():
     app.add_handler(CommandHandler("reset", reset))
     app.add_handler(CallbackQueryHandler(admin_callback, pattern="^admin_"))
 
-    db_init_blacklist()
+    db_init_tables()
     threading.Thread(target=run_health_server, daemon=True).start()
     logger.info("PromoJob Bot started with PostgreSQL persistence")
     app.run_polling()
