@@ -41,7 +41,7 @@ logger = logging.getLogger(__name__)
 
 def get_db():
     url = DATABASE_URL.replace("postgres://", "postgresql://", 1)
-    return psycopg2.connect(url, cursor_factory=psycopg2.extras.RealDictCursor)
+    return psycopg2.connect(url, cursor_factory=psycopg2.extras.RealDictCursor, sslmode="prefer")
 
 
 def db_init_tables():
