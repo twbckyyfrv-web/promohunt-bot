@@ -1,1 +1,1 @@
-worker: python3 bot/promobot.py
+web: python3 main.py
